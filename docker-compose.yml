@@ -1,0 +1,55 @@
+x-agent-common: &agent-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  environment:
+    SUMMARY_URL: http://summary:8000
+    SITE_URL: http://site_maintainer:8000
+    FEISHU_URL: http://feishu_doc:8000
+
+services:
+  summary:
+    <<: *agent-common
+    command: ["python", "-m", "agents.summary.main"]
+    volumes:
+      - ./agents/summary:/app/agents/summary
+      - ./common:/app/common
+    environment:
+      AGENT_ROLE: summary
+      AGENT_PORT: "8000"
+      SUMMARY_URL: http://summary:8000
+      SITE_URL: http://site_maintainer:8000
+      FEISHU_URL: http://feishu_doc:8000
+    ports:
+      - "8001:8000"
+
+  site_maintainer:
+    <<: *agent-common
+    command: ["python", "-m", "agents.site_maintainer.main"]
+    volumes:
+      - ./agents/site_maintainer:/app/agents/site_maintainer
+      - ./common:/app/common
+    environment:
+      AGENT_ROLE: site_maintainer
+      AGENT_PORT: "8000"
+      SUMMARY_URL: http://summary:8000
+      SITE_URL: http://site_maintainer:8000
+      FEISHU_URL: http://feishu_doc:8000
+    ports:
+      - "8002:8000"
+
+  feishu_doc:
+    <<: *agent-common
+    command: ["python", "-m", "agents.feishu_doc.main"]
+    volumes:
+      - ./agents/feishu_doc:/app/agents/feishu_doc
+      - ./common:/app/common
+    environment:
+      AGENT_ROLE: feishu_doc
+      AGENT_PORT: "8000"
+      SUMMARY_URL: http://summary:8000
+      SITE_URL: http://site_maintainer:8000
+      FEISHU_URL: http://feishu_doc:8000
+    ports:
+      - "8003:8000"
