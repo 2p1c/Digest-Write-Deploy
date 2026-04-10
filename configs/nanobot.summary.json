@@ -1,0 +1,26 @@
+{
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "token": "${TELEGRAM_BOT_TOKEN_SUMMARY}",
+      "allowFrom": ["*"]
+    }
+  },
+  "providers": {
+    "custom": {
+      "apiKey": "${LLM_API_KEY}",
+      "apiBase": "${LLM_BASE_URL}"
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": "${LLM_MODEL}",
+      "provider": "custom"
+    },
+    "summary": {
+      "model": "${LLM_MODEL}",
+      "provider": "custom",
+      "systemPrompt": "You are Summary Agent, a helpful AI assistant. Your responsibilities: - Summarize content, articles, or discussions - Provide concise overviews of complex topics - Extract key points from messages. Be friendly, helpful, and concise." 
+    }
+  }
+}

@@ -1,28 +1,78 @@
+"""Site Maintainer Agent - handles site maintenance tasks via Telegram with LLM."""
+
 import os
-from http.server import BaseHTTPRequestHandler, HTTPServer
+import logging
+import asyncio
+from telegram import Update, Message
+
+from common.telegram_client import TelegramAgent, chat_with_llm
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
-class Handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        if self.path == "/health":
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(b'{"service":"site_maintainer","status":"ok"}')
-            return
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN_SITE", "")
+BOT_TOKEN_SUMMARY = os.getenv("TELEGRAM_BOT_TOKEN_SUMMARY", "")
+BOT_TOKEN_FEISHU = os.getenv("TELEGRAM_BOT_TOKEN_FEISHU", "")
 
-        self.send_response(404)
-        self.end_headers()
 
-    def log_message(self, fmt, *args):
+async def handle_message(
+    agent: TelegramAgent,
+    update: Update,
+    message: Message,
+    conv_id: str,
+    depth: int,
+):
+    """Handle incoming messages with LLM."""
+    text = message.text or ""
+    text = text.replace(f"@{agent.bot.username}", "").strip()
+
+    if text.startswith("[conv_"):
+        end_idx = text.index("] ")
+        text = text[end_idx + 2:].strip()
+
+    logger.info(f"Site Maintainer agent (conv={conv_id[:8]}, depth={depth}): {text[:50]}...")
+
+    messages = [
+        {
+            "role": "system",
+            "name": "system",
+            "content": """You are Site Maintainer Agent, a helpful AI assistant.
+
+Your responsibilities:
+- Help with website maintenance and deployment questions
+- Provide information about system status and health
+- Assist with technical troubleshooting
+
+Be technical, accurate, and helpful. Keep responses short."""
+        },
+        {"role": "user", "name": message.from_user.username or "user", "content": text}
+    ]
+
+    response = await chat_with_llm(messages, agent_name="Site Maintainer Agent")
+    escaped = agent.escape_markdown_v2(response)
+
+    await agent.send_to_group(escaped, reply_to_message_id=message.message_id)
+
+
+async def main():
+    """Main entry point."""
+    if not BOT_TOKEN:
+        logger.error("TELEGRAM_BOT_TOKEN_SITE not set!")
         return
 
+    agent = TelegramAgent(
+        bot_token=BOT_TOKEN,
+        agent_name="site_maintainer",
+        other_bot_tokens={
+            "summary": BOT_TOKEN_SUMMARY,
+            "feishu_doc": BOT_TOKEN_FEISHU,
+        },
+    )
 
-def main():
-    port = int(os.getenv("AGENT_PORT", "8000"))
-    server = HTTPServer(("0.0.0.0", port), Handler)
-    server.serve_forever()
+    agent.register_handler(handle_message)
+    await agent.start()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

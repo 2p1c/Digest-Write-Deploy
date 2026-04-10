@@ -1,55 +1,57 @@
-x-agent-common: &agent-common
-  build:
-    context: .
-    dockerfile: Dockerfile
-  restart: unless-stopped
-  environment:
-    SUMMARY_URL: http://summary:8000
-    SITE_URL: http://site_maintainer:8000
-    FEISHU_URL: http://feishu_doc:8000
-
 services:
   summary:
-    <<: *agent-common
-    command: ["python", "-m", "agents.summary.main"]
-    volumes:
-      - ./agents/summary:/app/agents/summary
-      - ./common:/app/common
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      AGENT_ROLE: summary
-      AGENT_PORT: "8000"
-      SUMMARY_URL: http://summary:8000
-      SITE_URL: http://site_maintainer:8000
-      FEISHU_URL: http://feishu_doc:8000
+      - AGENT_NAME=summary
+      - OPENAI_API_KEY=${LLM_API_KEY}
+      - MINIMAX_API_KEY=${LLM_API_KEY}
+    volumes:
+      - ./scripts/start_nanobot.sh:/start_nanobot.sh:ro
+      - ./configs/nanobot.summary.json:/app/configs/nanobot.summary.json:ro
+      - ./agents/summary/.nanobot:/root/.nanobot
+    command: ["/bin/bash", "/start_nanobot.sh"]
     ports:
       - "8001:8000"
 
   site_maintainer:
-    <<: *agent-common
-    command: ["python", "-m", "agents.site_maintainer.main"]
-    volumes:
-      - ./agents/site_maintainer:/app/agents/site_maintainer
-      - ./common:/app/common
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      AGENT_ROLE: site_maintainer
-      AGENT_PORT: "8000"
-      SUMMARY_URL: http://summary:8000
-      SITE_URL: http://site_maintainer:8000
-      FEISHU_URL: http://feishu_doc:8000
+      - AGENT_NAME=site_maintainer
+      - OPENAI_API_KEY=${LLM_API_KEY}
+      - MINIMAX_API_KEY=${LLM_API_KEY}
+    volumes:
+      - ./scripts/start_nanobot.sh:/start_nanobot.sh:ro
+      - ./configs/nanobot.site_maintainer.json:/app/configs/nanobot.site_maintainer.json:ro
+      - ./agents/site_maintainer/.nanobot:/root/.nanobot
+    command: ["/bin/bash", "/start_nanobot.sh"]
     ports:
       - "8002:8000"
 
   feishu_doc:
-    <<: *agent-common
-    command: ["python", "-m", "agents.feishu_doc.main"]
-    volumes:
-      - ./agents/feishu_doc:/app/agents/feishu_doc
-      - ./common:/app/common
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      AGENT_ROLE: feishu_doc
-      AGENT_PORT: "8000"
-      SUMMARY_URL: http://summary:8000
-      SITE_URL: http://site_maintainer:8000
-      FEISHU_URL: http://feishu_doc:8000
+      - AGENT_NAME=feishu_doc
+      - OPENAI_API_KEY=${LLM_API_KEY}
+      - MINIMAX_API_KEY=${LLM_API_KEY}
+    volumes:
+      - ./scripts/start_nanobot.sh:/start_nanobot.sh:ro
+      - ./configs/nanobot.feishu_doc.json:/app/configs/nanobot.feishu_doc.json:ro
+      - ./agents/feishu_doc/.nanobot:/root/.nanobot
+    command: ["/bin/bash", "/start_nanobot.sh"]
     ports:
       - "8003:8000"

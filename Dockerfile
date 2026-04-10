@@ -8,17 +8,21 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl ca-certificates bash \
+    && apt-get install -y --no-install-recommends curl ca-certificates bash git gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
+# Install nanobot
+RUN pip install nanobot-ai
+
 COPY . /app
 
-RUN if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-RUN uv tool install nanobot-ai
+RUN pip install httpx
 
 EXPOSE 8000
 
-CMD ["python", "-m", "agents.summary"]
+# Create nanobot config directory
+RUN mkdir -p /root/.nanobot
+
+CMD ["tail", "-f", "/dev/null"]

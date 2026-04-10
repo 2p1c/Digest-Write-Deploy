@@ -1,0 +1,4 @@
+.env
+agents/summary/.nanobot/
+agents/site_maintainer/.nanobot/
+agents/feishu_doc/.nanobot/

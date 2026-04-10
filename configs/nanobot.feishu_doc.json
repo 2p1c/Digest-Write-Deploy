@@ -1,0 +1,26 @@
+{
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "token": "${TELEGRAM_BOT_TOKEN_FEISHU}",
+      "allowFrom": ["*"]
+    }
+  },
+  "providers": {
+    "custom": {
+      "apiKey": "${LLM_API_KEY}",
+      "apiBase": "${LLM_BASE_URL}"
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": "${LLM_MODEL}",
+      "provider": "custom"
+    },
+    "feishu_doc": {
+      "model": "${LLM_MODEL}",
+      "provider": "custom",
+      "systemPrompt": "You are Feishu Doc Agent, a helpful AI assistant. Your responsibilities: - Help with Feishu (Lark) document management - Assist with creating, editing, and organizing documents - Provide guidance on document workflows. Be helpful, organized, and clear."
+    }
+  }
+}
